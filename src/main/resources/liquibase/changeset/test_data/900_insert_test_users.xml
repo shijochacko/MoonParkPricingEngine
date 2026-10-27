@@ -1,0 +1,46 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+    Test users, one per person role. Password for all of them: Test-Password-123 (BCrypt, cost 10).
+    context="test" is a second safety net: these rows are only inserted when Liquibase runs with contexts=test.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <changeSet author="MoonPark" id="900-insert-test-users" context="test">
+        <sql>
+            INSERT INTO moonpark_pricing_data.app_user (username, email, full_name, password_hash)
+            VALUES ('test.user', 'test.user@moonpark.test', 'Test User',
+                    '{bcrypt}$2a$10$yfQhVoxF.ylTasNIwDOpCu7zC1A35ilWDxVf.iuxPiual7ecgqr9m'),
+                   ('test.admin', 'test.admin@moonpark.test', 'Test Admin',
+                    '{bcrypt}$2a$10$yfQhVoxF.ylTasNIwDOpCu7zC1A35ilWDxVf.iuxPiual7ecgqr9m'),
+                   ('test.superadmin', 'test.superadmin@moonpark.test', 'Test Super Admin',
+                    '{bcrypt}$2a$10$yfQhVoxF.ylTasNIwDOpCu7zC1A35ilWDxVf.iuxPiual7ecgqr9m')
+            ON CONFLICT (username) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_pricing_data.app_user
+            WHERE username IN ('test.user', 'test.admin', 'test.superadmin');
+        </rollback>
+    </changeSet>
+
+    <!-- test.admin has two roles (ADMIN + USER) to show that a profile can hold several roles -->
+    <changeSet author="MoonPark" id="900-insert-test-user-roles" context="test">
+        <sql>
+            INSERT INTO moonpark_pricing_data.user_role (user_id, role_id)
+            SELECT u.user_id, r.role_id
+            FROM moonpark_pricing_data.app_user u
+            JOIN moonpark_master_data.role r ON
+                   (u.username = 'test.user' AND r.role_name = 'USER')
+                OR (u.username = 'test.admin' AND r.role_name IN ('ADMIN', 'USER'))
+                OR (u.username = 'test.superadmin' AND r.role_name = 'SUPER_ADMIN')
+            ON CONFLICT (user_id, role_id) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_pricing_data.user_role
+            WHERE user_id IN (SELECT user_id FROM moonpark_pricing_data.app_user
+                              WHERE username IN ('test.user', 'test.admin', 'test.superadmin'));
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,38 @@
+# Production overrides. Activate with SPRING_PROFILES_ACTIVE=prod.
+# All secrets come from environment variables (Kubernetes Secret). Placeholders WITHOUT a default
+# (e.g. ${JWT_SECRET}) make the application fail at startup when the variable is missing,
+# so a production pod can never run with a dev secret.
+server:
+  forward-headers-strategy: framework   # trust X-Forwarded-For from the ingress only
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+  bootstrap:
+    # Only set these for the very first deployment, then remove them from the Secret
+    super-admin-username: ${SUPER_ADMIN_USERNAME:}
+    super-admin-email: ${SUPER_ADMIN_EMAIL:}
+    super-admin-password: ${SUPER_ADMIN_PASSWORD:}
+
+ratelimit:
+  store: ${RATELIMIT_STORE:redis}
+
+management:
+  endpoint:
+    health:
+      show-details: ${HEALTH_SHOW_DETAILS:never}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING:0.05}
+
+logging:
+  level:
+    no.moonpark: ${LOG_LEVEL:INFO}

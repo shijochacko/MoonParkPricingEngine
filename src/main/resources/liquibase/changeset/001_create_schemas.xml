@@ -1,0 +1,39 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <!-- Master data: slowly changing reference data (zones, roles, permissions) -->
+    <changeSet author="MoonPark" id="001-create-schema-master-data">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS moonpark_master_data;
+        </sql>
+        <rollback>
+            DROP SCHEMA IF EXISTS moonpark_master_data CASCADE;
+        </rollback>
+    </changeSet>
+
+    <!-- Pricing data: transactional data (tariff versions, users, API clients, audit) -->
+    <changeSet author="MoonPark" id="001-create-schema-pricing-data">
+        <sql>
+            CREATE SCHEMA IF NOT EXISTS moonpark_pricing_data;
+        </sql>
+        <rollback>
+            DROP SCHEMA IF EXISTS moonpark_pricing_data CASCADE;
+        </rollback>
+    </changeSet>
+
+    <!--
+        btree_gist is needed for the "no overlapping tariff versions" EXCLUDE constraint.
+        On managed PostgreSQL (RDS, Azure, Cloud SQL) it is allow-listed; otherwise a DBA creates it once.
+    -->
+    <changeSet author="MoonPark" id="001-create-extension-btree-gist">
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS btree_gist;
+        </sql>
+        <rollback>
+            <!-- Extension may be shared with other schemas, so it is intentionally not dropped -->
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

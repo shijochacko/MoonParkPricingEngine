@@ -1,0 +1,31 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+    A test third-party client on the FREE plan (60 requests/minute, burst 20).
+    Raw API key (test only!): mp_TestApiKeyForIntegrationTests00000000000000
+    Only its SHA-256 hash is stored, exactly as for real clients.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <changeSet author="MoonPark" id="901-insert-test-api-client" context="test">
+        <sql>
+            INSERT INTO moonpark_pricing_data.api_client
+                (client_name, contact_email, key_prefix, key_hash, plan_code)
+            VALUES ('Test Parking App', 'integration@moonpark.test', 'mp_TestApiKe',
+                    '1274c188c4e7585f10ede5fef71a96997569742ef3f843ee370e4b16369b0425', 'FREE')
+            ON CONFLICT (client_name) DO NOTHING;
+
+            INSERT INTO moonpark_pricing_data.api_client_role (api_client_id, role_id)
+            SELECT c.api_client_id, r.role_id
+            FROM moonpark_pricing_data.api_client c
+            JOIN moonpark_master_data.role r ON r.role_name = 'EXTERNAL_CLIENT'
+            WHERE c.client_name = 'Test Parking App'
+            ON CONFLICT (api_client_id, role_id) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_pricing_data.api_client WHERE client_name = 'Test Parking App';
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

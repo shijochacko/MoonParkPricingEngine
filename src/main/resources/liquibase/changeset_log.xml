@@ -1,0 +1,19 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+    Master changelog for the MoonPark pricing engine.
+    Rules:
+      * Never edit a changeSet that has already run in any environment - add a new file instead.
+      * File names start with a running number so the order is obvious.
+      * Test-only data lives in changeset_log_test.xml and is never included here.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <include file="changeset/001_create_schemas.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/002_create_master_data_tables.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/003_create_pricing_data_tables.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/004_insert_master_data.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/005_insert_default_tariffs.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

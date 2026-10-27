@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+    Changelog used by automated tests and the shared test environment.
+    It runs everything from the production changelog and then adds well-known test data.
+    Never point a production deployment at this file.
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <include file="changeset_log.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/test_data/900_insert_test_users.xml" relativeToChangelogFile="true"/>
+    <include file="changeset/test_data/901_insert_test_api_clients.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

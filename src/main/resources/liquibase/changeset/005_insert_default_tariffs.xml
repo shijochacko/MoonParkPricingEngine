@@ -1,0 +1,29 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <!--
+        The starting tariffs. Later price changes are made through POST /api/v1/tariffs (a new version),
+        never by editing this file.
+    -->
+    <changeSet author="MoonPark" id="005-insert-default-tariffs">
+        <sql>
+            INSERT INTO moonpark_pricing_data.tariff_definition (zone_code, rule_type, parameters, valid_from)
+            VALUES ('M1', 'PER_STARTED_MINUTE',
+                    '{"hourlyRate": 60}'::jsonb,
+                    TIMESTAMPTZ '2020-01-01 00:00:00+00'),
+                   ('M2', 'HOURLY_WEEKDAY_WEEKEND',
+                    '{"weekdayRate": 100, "weekendRate": 200}'::jsonb,
+                    TIMESTAMPTZ '2020-01-01 00:00:00+00'),
+                   ('M3', 'DAYTIME_FREE_HOUR',
+                    '{"dayStart": "08:00", "dayEnd": "16:00", "freeMinutes": 60, "dayRate": 2, "nightRate": 3}'::jsonb,
+                    TIMESTAMPTZ '2020-01-01 00:00:00+00');
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_pricing_data.tariff_definition
+            WHERE zone_code IN ('M1', 'M2', 'M3') AND valid_from = TIMESTAMPTZ '2020-01-01 00:00:00+00';
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

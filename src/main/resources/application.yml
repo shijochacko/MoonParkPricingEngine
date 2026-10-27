@@ -1,0 +1,134 @@
+# Default configuration. Works out of the box for local development:
+#   ./gradlew bootRun
+# Every value can be overridden with an environment variable (shown as ${NAME:default}).
+# Production: start with SPRING_PROFILES_ACTIVE=prod - application-prod.yml removes the dev defaults
+# for secrets, so the application refuses to start if JWT_SECRET or DB_PASSWORD is missing.
+spring:
+  application:
+    name: moonpark-pricing
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/moonpark_dev}
+    username: ${DB_USERNAME:moonpark}
+    password: ${DB_PASSWORD:moonpark}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 2
+      connection-timeout: 3000
+      max-lifetime: 1800000
+      pool-name: moonpark-pool
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        default_batch_fetch_size: 50
+  liquibase:
+    change-log: classpath:liquibase/changeset_log.xml
+  cache:
+    type: caffeine   # local in-memory cache; Redis is only used for shared rate-limit buckets
+    cache-names: fees
+    caffeine:
+      spec: maximumSize=100000,expireAfterWrite=10m
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 200ms
+    web:
+      pageable:
+        max-page-size: 100
+        default-page-size: 20
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+  tomcat:
+    max-connections: 2000
+    accept-count: 100
+    connection-timeout: 5s
+  max-http-request-header-size: 16KB
+
+pricing:
+  time-zone: ${PRICING_TIME_ZONE:Europe/Oslo}
+  max-period: P31D
+  tariff-refresh: PT60S
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:local-dev-secret-change-me-0123456789abcdef}   # dev only, prod requires JWT_SECRET
+    issuer: moonpark-pricing
+    token-lifetime: PT30M
+  bootstrap:
+    # Created once at startup if no SUPER_ADMIN exists yet. Dev defaults; empty in prod unless set.
+    super-admin-username: ${SUPER_ADMIN_USERNAME:superadmin}
+    super-admin-email: ${SUPER_ADMIN_EMAIL:superadmin@moonpark.local}
+    super-admin-password: ${SUPER_ADMIN_PASSWORD:ChangeMe-Local-123}
+
+ratelimit:
+  enabled: ${RATELIMIT_ENABLED:true}
+  store: ${RATELIMIT_STORE:local}
+  redis-key-prefix: "moonpark:rl:"
+  batch-request-cost: 10
+
+resilience4j:
+  bulkhead:
+    instances:
+      feeCalculation:
+        max-concurrent-calls: 200
+        max-wait-duration: 50ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: ${HEALTH_SHOW_DETAILS:always}
+      group:
+        readiness:
+          include: readinessState,db,tariffs
+  health:
+    redis:
+      enabled: false   # Redis down must not make pods unready: rate limiting falls back to local buckets
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING:0.0}
+  otlp:
+    tracing:
+      endpoint: ${OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+
+logging:
+  level:
+    root: INFO
+    no.moonpark: ${LOG_LEVEL:DEBUG}

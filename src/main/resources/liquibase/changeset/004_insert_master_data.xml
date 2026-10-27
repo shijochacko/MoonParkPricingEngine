@@ -1,0 +1,74 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd">
+
+    <changeSet author="MoonPark" id="004-insert-parking-zones">
+        <sql>
+            INSERT INTO moonpark_master_data.parking_zone (zone_code, zone_name, description)
+            VALUES ('M1', 'Rate zone M1', '60 kr per hour, charged per started minute'),
+                   ('M2', 'Rate zone M2', '100 kr per started hour on weekdays, 200 kr on weekends'),
+                   ('M3', 'Rate zone M3', 'Mon-Sat 08-16 first hour free then 2 kr/min, otherwise 3 kr/min, Sunday free')
+            ON CONFLICT (zone_code) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_master_data.parking_zone WHERE zone_code IN ('M1', 'M2', 'M3');
+        </rollback>
+    </changeSet>
+
+    <changeSet author="MoonPark" id="004-insert-permissions">
+        <sql>
+            INSERT INTO moonpark_master_data.permission (permission_name, description)
+            VALUES ('FEE_CALCULATE', 'Calculate a parking fee'),
+                   ('FEE_CALCULATE_BATCH', 'Calculate many parking fees in one request'),
+                   ('PROFILE_READ', 'Read own profile'),
+                   ('TARIFF_READ', 'Read tariff versions'),
+                   ('TARIFF_WRITE', 'Create and deactivate tariff versions'),
+                   ('CLIENT_MANAGE', 'Manage third-party API clients'),
+                   ('USER_READ', 'Read users'),
+                   ('USER_MANAGE', 'Create users and change their roles'),
+                   ('AUDIT_READ', 'Read the audit trail')
+            ON CONFLICT (permission_name) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_master_data.permission;
+        </rollback>
+    </changeSet>
+
+    <changeSet author="MoonPark" id="004-insert-roles">
+        <sql>
+            INSERT INTO moonpark_master_data.role (role_name, description)
+            VALUES ('USER', 'Person who calculates parking fees'),
+                   ('EXTERNAL_CLIENT', 'Third-party system using an API key'),
+                   ('ADMIN', 'Operates tariffs and API clients'),
+                   ('SUPER_ADMIN', 'Full access, including user and role management')
+            ON CONFLICT (role_name) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_master_data.role;
+        </rollback>
+    </changeSet>
+
+    <!-- Role -> permission matrix. Lookups by name so the generated ids never matter. -->
+    <changeSet author="MoonPark" id="004-insert-role-permissions">
+        <sql>
+            INSERT INTO moonpark_master_data.role_permission (role_id, permission_id)
+            SELECT r.role_id, p.permission_id
+            FROM moonpark_master_data.role r
+            JOIN moonpark_master_data.permission p ON
+                   (r.role_name = 'USER'
+                        AND p.permission_name IN ('FEE_CALCULATE', 'PROFILE_READ', 'TARIFF_READ'))
+                OR (r.role_name = 'EXTERNAL_CLIENT'
+                        AND p.permission_name IN ('FEE_CALCULATE', 'FEE_CALCULATE_BATCH', 'PROFILE_READ', 'TARIFF_READ'))
+                OR (r.role_name = 'ADMIN'
+                        AND p.permission_name IN ('FEE_CALCULATE', 'FEE_CALCULATE_BATCH', 'PROFILE_READ', 'TARIFF_READ',
+                                                  'TARIFF_WRITE', 'CLIENT_MANAGE', 'USER_READ', 'AUDIT_READ'))
+                OR (r.role_name = 'SUPER_ADMIN')
+            ON CONFLICT (role_id, permission_id) DO NOTHING;
+        </sql>
+        <rollback>
+            DELETE FROM moonpark_master_data.role_permission;
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

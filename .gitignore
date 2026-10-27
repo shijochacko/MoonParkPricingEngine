@@ -1,0 +1,62 @@
+# Gradle caches and generated build output
+.gradle/
+.kotlin/
+build/
+out/
+bin/
+*.class
+
+# Keep the Gradle wrapper, including gradle/wrapper/gradle-wrapper.jar.
+# Do not ignore all JAR files: the wrapper is required to build the project.
+
+# IDE and editor-local settings
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+
+# Local environment files and deployment credentials
+.env
+.env.*
+*.env
+*.env.*
+!.env.example
+!.env.*.example
+!*.env.example
+!*.env.*.example
+application-local.properties
+application-local.yml
+application-local.yaml
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Logs, JVM crash reports, and memory dumps
+logs/
+*.log
+hs_err_pid*
+replay_pid*
+*.hprof
+*.heapdump
+
+# Docker image exports (docker save)
+moonpark-pricing*.tar
+moonpark-pricing*.tar.gz
+
+# OS metadata and temporary editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
+*.tmp
+*.bak

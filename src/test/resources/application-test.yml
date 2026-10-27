@@ -1,0 +1,14 @@
+# Used by integration tests (@ActiveProfiles("test")). The datasource comes from Testcontainers.
+spring:
+  liquibase:
+    change-log: classpath:liquibase/changeset_log_test.xml
+    contexts: test
+
+security:
+  jwt:
+    secret: test-secret-only-for-automated-tests-0123456789
+  bootstrap:
+    super-admin-username: ""
+
+ratelimit:
+  store: local
